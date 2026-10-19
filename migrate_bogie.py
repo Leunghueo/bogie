@@ -11,8 +11,8 @@
     架号     <- chNo1
     位号     <- BogieNo
     架位号   <- 架号-位号 (如 M1-2)
-    空载压力1 <- Loadf1
-    空载压力2 <- Loadf2
+    空载压力1 <- FreeLoadf1
+    空载压力2 <- FreeLoadf2
     满载压力1 <- FullLoadf1
     满载压力2 <- FullLoadf2
     加载头快进位移 <- TblBogieType.Jzt1kjcxwy  (按车型 zxjxh 关联)
@@ -44,8 +44,8 @@ FILLED = {
     "车型": "CRHxh",
     "架号": "chNo1",
     "位号": "BogieNo",
-    "空载压力1": "Loadf1",
-    "空载压力2": "Loadf2",
+    "空载压力1": "FreeLoadf1",
+    "空载压力2": "FreeLoadf2",
     "满载压力1": "FullLoadf1",
     "满载压力2": "FullLoadf2",
 }

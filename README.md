@@ -34,8 +34,8 @@ python3 gen_bogies.py --json bogie_template_501.json --csv template.csv --out bo
 | 架号 | chNo1 |
 | 位号 | BogieNo |
 | 架位号 | 架号-位号（如 `M1-2`） |
-| 空载压力1 | Loadf1 |
-| 空载压力2 | Loadf2 |
+| 空载压力1 | FreeLoadf1 |
+| 空载压力2 | FreeLoadf2 |
 | 满载压力1 | FullLoadf1 |
 | 满载压力2 | FullLoadf2 |
 | 加载头快进位移 | TblBogieType.Jzt1kjcxwy（按车型关联） |

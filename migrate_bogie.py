@@ -137,13 +137,29 @@ AXLE_FRAME_DIST = {  # 轴箱与构架间距 (下限, 上限)
 }
 
 
+AIR_SPRING_LEAK = {  # 空簧漏气量上限 (精确匹配车型名, 未列出的留空)
+    "fuxing": "5",
+    "CRH2A统": "5",
+    "CRH2B统": "5",
+    "CRH380A": "5",
+    "CRH380A统": "5",
+    "CRH380AL": "5",
+    "CRH380AL统": "5",
+    "CRH2C2": "5",
+    "CRH2A": "20",
+    "CRH2B": "20",
+    "CRH2E": "20",
+    "CRH2C1": "20",
+}
+
+
 def is_hexie(车型: str) -> bool:
     return 车型.startswith("CRH")
 
 
 def apply_param_rules(rows: list[dict]) -> dict[str, int]:
-    """步骤4: 按和谐号/复兴号规则填充联轴节高度与轴箱与构架间距。"""
-    stats = {"联轴节高度": 0, "轴箱与构架间距": 0}
+    """步骤4: 按和谐号/复兴号规则填充联轴节高度、轴箱与构架间距、空簧漏气量。"""
+    stats = {"联轴节高度": 0, "轴箱与构架间距": 0, "空簧漏气量上限": 0}
     for row in rows:
         车型 = row["车型"]
         kind = "hexie" if is_hexie(车型) else "fuxing"
@@ -158,6 +174,13 @@ def apply_param_rules(rows: list[dict]) -> dict[str, int]:
             continue  # 未列出的和谐号车型留空
         row["轴箱与构架间距下限"], row["轴箱与构架间距上限"] = lo, hi
         stats["轴箱与构架间距"] += 1
+        # 空簧漏气量上限
+        if kind == "fuxing":
+            row["空簧漏气量上限"] = AIR_SPRING_LEAK["fuxing"]
+            stats["空簧漏气量上限"] += 1
+        elif 车型 in AIR_SPRING_LEAK:
+            row["空簧漏气量上限"] = AIR_SPRING_LEAK[车型]
+            stats["空簧漏气量上限"] += 1
     return stats
 
 
@@ -175,7 +198,8 @@ def main() -> int:
 
     stats = apply_param_rules(rows)
     print(f"按规则填充: 联轴节高度 {stats['联轴节高度']} 行, "
-          f"轴箱与构架间距 {stats['轴箱与构架间距']} 行")
+          f"轴箱与构架间距 {stats['轴箱与构架间距']} 行, "
+          f"空簧漏气量上限 {stats['空簧漏气量上限']} 行")
 
     with open(TEMPLATE_FILE, "w", encoding="utf-8", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=TARGET_COLUMNS)

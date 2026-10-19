@@ -13,7 +13,7 @@
 | `template.csv` | 迁移目标文件（已填充 830 行数据） |
 | `bogie_template_501.json` | bogie 对象 JSON 模板（含 `@xxxx` 占位符） |
 | `gen_bogies.py` | 生成脚本：按 CSV 每行 + JSON 模板生成 bogie 对象，输出 `{车型: {架位号: 对象}}` 三层 JSON |
-| `bogies.json` | 生成结果示例（42 车型 / 830 个对象） |
+| `bogies.json` | 生成结果（42 车型 / 830 个对象；约 7.8MB，超出推送通道上限未入仓，本地按下面命令生成） |
 
 ## 生成 bogie 对象数据
 

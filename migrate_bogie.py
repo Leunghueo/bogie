@@ -15,6 +15,8 @@
     空载压力2 <- Loadf2
     满载压力1 <- FullLoadf1
     满载压力2 <- FullLoadf2
+    加载头快进位移 <- TblBogieType.Jzt1kjcxwy  (按车型 zxjxh 关联)
+    加载头间距     <- TblBogieCenterPt.Jzt12ZxDist (按车型 zxjxh 关联)
 
 用法: python3 migrate_bogie.py
 """
@@ -49,13 +51,27 @@ FILLED = {
 }
 
 
-def export_table() -> list[dict]:
+def export_table_csv(table: str) -> list[dict]:
     """用 mdb-export 导出 Access 表为字典列表。"""
     proc = subprocess.run(
-        ["mdb-export", str(MDB_FILE), "TblBogieLoaderInfo"],
+        ["mdb-export", str(MDB_FILE), table],
         capture_output=True, text=True, check=True,
     )
     return list(csv.DictReader(proc.stdout.splitlines()))
+
+
+def export_table() -> list[dict]:
+    return export_table_csv("TblBogieLoaderInfo")
+
+
+def model_lookup(table: str, key_col: str, val_col: str) -> dict[str, str]:
+    """按车型建查找表: 车型 -> 字段值。"""
+    lookup = {}
+    for rec in export_table_csv(table):
+        key = (rec.get(key_col) or "").strip()
+        if key:
+            lookup[key] = (rec.get(val_col) or "").strip()
+    return lookup
 
 
 def migrate(records: list[dict]) -> list[dict]:
@@ -76,6 +92,28 @@ def migrate(records: list[dict]) -> list[dict]:
     return rows
 
 
+def fill_model_params(rows: list[dict]) -> tuple[int, int]:
+    """步骤2/3: 按车型填充 加载头快进位移 / 加载头间距。
+    返回 (填充了快进位移的行数, 填充了间距的行数)。"""
+    kjcxwy = model_lookup("TblBogieType", "zxjxh", "Jzt1kjcxwy")
+    zxdist = model_lookup("TblBogieCenterPt", "zxjxh", "Jzt12ZxDist")
+    n1 = n2 = 0
+    missing = set()
+    for row in rows:
+        车型 = row["车型"]
+        if 车型 in kjcxwy and kjcxwy[车型]:
+            row["加载头快进位移"] = kjcxwy[车型]
+            n1 += 1
+        if 车型 in zxdist and zxdist[车型]:
+            row["加载头间距"] = zxdist[车型]
+            n2 += 1
+        if 车型 not in kjcxwy or 车型 not in zxdist:
+            missing.add(车型)
+    if missing:
+        print(f"警告: 以下车型在参数表中无对应记录: {sorted(missing)}")
+    return n1, n2
+
+
 def main() -> int:
     if not MDB_FILE.exists():
         print(f"错误: 找不到数据源 {MDB_FILE}", file=sys.stderr)
@@ -84,6 +122,9 @@ def main() -> int:
     records = export_table()
     print(f"从 TblBogieLoaderInfo 读出 {len(records)} 条记录")
     rows = migrate(records)
+
+    n1, n2 = fill_model_params(rows)
+    print(f"按车型填充: 加载头快进位移 {n1} 行, 加载头间距 {n2} 行")
 
     with open(TEMPLATE_FILE, "w", encoding="utf-8", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=TARGET_COLUMNS)

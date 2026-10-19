@@ -24,6 +24,8 @@
 | 空载压力2 | Loadf2 |
 | 满载压力1 | FullLoadf1 |
 | 满载压力2 | FullLoadf2 |
+| 加载头快进位移 | TblBogieType.Jzt1kjcxwy（按车型关联） |
+| 加载头间距 | TblBogieCenterPt.Jzt12ZxDist（按车型关联） |
 
 其余列（加载头间距、轴距差上下限等）暂无数据源，保持为空。
 

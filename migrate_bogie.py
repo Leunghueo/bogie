@@ -38,6 +38,7 @@ TARGET_COLUMNS = [
     "空载压力1", "空载压力2", "满载压力1", "满载压力2",
     "轴箱与构架间距下限", "轴箱与构架间距上限",
     "空簧漏气量上限",
+    "反复空载", "反复满载",
 ]
 
 FILLED = {
@@ -158,8 +159,9 @@ def is_hexie(车型: str) -> bool:
 
 
 def apply_param_rules(rows: list[dict]) -> dict[str, int]:
-    """步骤4: 按和谐号/复兴号规则填充联轴节高度、轴箱与构架间距、空簧漏气量、轴距差。"""
-    stats = {"联轴节高度": 0, "轴箱与构架间距": 0, "空簧漏气量上限": 0, "轴距差": 0}
+    """步骤4: 按和谐号/复兴号规则填充联轴节高度、轴箱与构架间距、空簧漏气量、轴距差、反复空载/满载。"""
+    stats = {"联轴节高度": 0, "轴箱与构架间距": 0, "空簧漏气量上限": 0, "轴距差": 0,
+             "反复空载": 0, "反复满载": 0}
     for row in rows:
         车型 = row["车型"]
         kind = "hexie" if is_hexie(车型) else "fuxing"
@@ -169,6 +171,19 @@ def apply_param_rules(rows: list[dict]) -> dict[str, int]:
         # 轴距差: 下限 0 / 上限 1 (全部车型, 不受 continue 影响)
         row["轴距差下限"], row["轴距差上限"] = "0", "1"
         stats["轴距差"] += 1
+        # 反复满载: 和谐号 113.5 / 复兴号 119 (全部车型)
+        row["反复满载"] = "113.5" if kind == "hexie" else "119"
+        stats["反复满载"] += 1
+        # 反复空载: 复兴号 90; 和谐号按架号首字母 T->80 / M->70, 其余留空
+        if kind == "fuxing":
+            row["反复空载"] = "90"
+            stats["反复空载"] += 1
+        elif row["架号"].startswith("T"):
+            row["反复空载"] = "80"
+            stats["反复空载"] += 1
+        elif row["架号"].startswith("M"):
+            row["反复空载"] = "70"
+            stats["反复空载"] += 1
         if kind == "fuxing":
             lo, hi = AXLE_FRAME_DIST["fuxing"]
         elif 车型 in AXLE_FRAME_DIST:
@@ -203,7 +218,9 @@ def main() -> int:
     print(f"按规则填充: 联轴节高度 {stats['联轴节高度']} 行, "
           f"轴箱与构架间距 {stats['轴箱与构架间距']} 行, "
           f"空簧漏气量上限 {stats['空簧漏气量上限']} 行, "
-          f"轴距差 {stats['轴距差']} 行")
+          f"轴距差 {stats['轴距差']} 行, "
+          f"反复空载 {stats['反复空载']} 行, "
+          f"反复满载 {stats['反复满载']} 行")
 
     with open(TEMPLATE_FILE, "w", encoding="utf-8", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=TARGET_COLUMNS)
